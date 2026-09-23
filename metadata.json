@@ -1,0 +1,7 @@
+{
+  "name": "Lumen",
+  "description": "Immersive dark Pinterest-style visual discovery platform with interactive mouse spotlight effects for exploring images, reading atmospheric stories, and illuminating classic books.",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
