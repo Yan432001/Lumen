@@ -13,18 +13,22 @@ import {
 } from '@ant-design/icons';
 import { App } from 'antd';
 import { usePinterest } from '../context/PinterestContext.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 export function StoryReaderModal({ pin, onClose }) {
   const { message } = App.useApp();
   const { isSaved, isLiked, toggleLike, toggleSave, addComment } = usePinterest();
+  const { isDark } = useTheme();
   const [fontSize, setFontSize] = useState('medium'); // 'small', 'medium', 'large'
   const [fontFamily, setFontFamily] = useState('serif'); // 'serif', 'sans'
   const [readingTheme, setReadingTheme] = useState('obsidian'); // 'obsidian', 'sepia', 'night'
   const [commentText, setCommentText] = useState('');
   const [copied, setCopied] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   if (!pin) return null;
 
+  const storyImg = pin.imageUrl || pin.mediaUrl;
   const saved = isSaved(pin.id);
   const liked = isLiked(pin.id);
 
@@ -60,9 +64,10 @@ export function StoryReaderModal({ pin, onClose }) {
   }[readingTheme];
 
   return (
-    <div className="pin-modal-backdrop" onClick={onClose}>
+    <div className={`pin-modal-backdrop ${isDark ? 'dark-mode' : 'light-mode'}`} onClick={onClose}>
       <div
-        className={`pin-modal-container story-reader-modal ${themeClass}`}
+        className={`pin-modal-container story-reader-modal ${themeClass} ${isDark ? 'modal-theme-dark' : 'modal-theme-light'}`}
+        data-theme={isDark ? 'dark' : 'light'}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sticky Reader Toolbar */}
@@ -211,6 +216,41 @@ export function StoryReaderModal({ pin, onClose }) {
               )}
             </div>
 
+            {/* User Uploaded Story Image or Atmospheric Fallback Banner */}
+            {storyImg && !imageError ? (
+              <div className="story-reader-hero-wrapper">
+                <div className="story-reader-image-frame">
+                  <img
+                    src={storyImg}
+                    alt={pin.title}
+                    className="story-reader-image"
+                    referrerPolicy="no-referrer"
+                    onError={() => setImageError(true)}
+                  />
+                  <div className="story-reader-image-overlay" />
+                </div>
+                {pin.isAI && (
+                  <span className="story-reader-ai-badge">AI Generated Visual</span>
+                )}
+              </div>
+            ) : (
+              <div
+                className="story-reader-fallback-banner"
+                style={{
+                  background: pin.visualStyle?.gradient || 'linear-gradient(135deg, #064e3b 0%, #022c22 60%, #020617 100%)',
+                  border: `1px solid ${pin.visualStyle?.accent ? pin.visualStyle.accent + '33' : '#1e293b'}`
+                }}
+              >
+                <div className="fallback-symbol-watermark">{pin.visualStyle?.symbol || '🌿'}</div>
+                <div className="fallback-meta">
+                  <span className="fallback-category" style={{ color: pin.visualStyle?.accent || '#34d399' }}>
+                    {pin.category || 'Dark Fiction'}
+                  </span>
+                  <span className="fallback-sub">{pin.readTime || '5 min read'} · Nocturnal Chronicle</span>
+                </div>
+              </div>
+            )}
+
             {/* Story Manuscript Body */}
             <div className="story-manuscript-body">
               {pin.fullStory ? (
@@ -228,6 +268,12 @@ export function StoryReaderModal({ pin, onClose }) {
                     </p>
                   );
                 })
+              ) : pin.storyBody ? (
+                pin.storyBody.split('\n\n').map((paragraph, idx) => (
+                  <p key={idx} className={idx === 0 ? 'story-first-paragraph' : ''}>
+                    {paragraph}
+                  </p>
+                ))
               ) : (
                 <p className="story-first-paragraph">{pin.excerpt}</p>
               )}

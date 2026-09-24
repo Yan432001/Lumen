@@ -12,6 +12,7 @@ import {
   EyeOutlined,
 } from '@ant-design/icons';
 import { useSpotlight } from '../spotlight/useSpotlight.js';
+import { useTheme } from '../context/ThemeContext.jsx';
 import { PresetSelector } from './PresetSelector.jsx';
 import { ColorSettings } from './ColorSettings.jsx';
 import { AnimationSettings } from './AnimationSettings.jsx';
@@ -27,6 +28,7 @@ const SHAPE_OPTIONS = [
 ];
 
 export function SpotlightSettings() {
+  const { isDark, enableMouseSpotlight } = useTheme();
   const { settings, updateSettings, resetSettings, isSettingsOpen, setIsSettingsOpen } = useSpotlight();
   const [activeTab, setActiveTab] = useState('presets');
 
@@ -483,6 +485,23 @@ export function SpotlightSettings() {
           header: { backgroundColor: '#09090d', borderBottom: '1px solid #1e2029', padding: '16px 20px' },
         }}
       >
+        {!isDark && (
+          <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 flex items-center justify-between gap-3 text-xs">
+            <div>
+              <span className="font-semibold block text-amber-100">Light Mode Active</span>
+              Mouse darkness hover and spotlight are currently deleted. Switch to Dark Mode to enable interactive mouse illumination.
+            </div>
+            <Button
+              size="small"
+              type="primary"
+              onClick={() => enableMouseSpotlight()}
+              className="bg-rose-600 hover:bg-rose-500 border-none shrink-0"
+            >
+              Enable Dark Mode
+            </Button>
+          </div>
+        )}
+
         {/* Live Mini Preview Banner */}
         <LightPreview />
 

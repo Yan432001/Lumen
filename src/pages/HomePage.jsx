@@ -9,16 +9,17 @@ import {
 } from '@ant-design/icons';
 import { usePinterest } from '../context/PinterestContext.jsx';
 import { PinterestGrid } from '../components/PinterestGrid.jsx';
+import { StoryRingBar } from '../components/StoryRingBar.jsx';
 
-export function HomePage({ onNavigate, onOpenCreatePin }) {
+export function HomePage({ onNavigate, onOpenCreatePin, onOpenCreateStory }) {
   const { setActiveFilter, setSearchQuery } = usePinterest();
 
   const trendingTopics = [
-    { label: 'Rainy Street Noir', filter: 'photography', query: 'Kyoto' },
+    { label: 'Rainy Street Noir', filter: 'image', query: 'Kyoto' },
     { label: 'Victorian Clocks', filter: 'story', query: 'Watchmaker' },
     { label: 'Antique Grimoires', filter: 'book', query: 'Grimoire' },
     { label: 'Deep Space Nebula', filter: 'image', query: 'Nebula' },
-    { label: 'Nocturnal Folklore', filter: 'story', query: 'Folklore' },
+    { label: 'AI Cyber Cities', filter: 'ai', query: 'Cyberpunk' },
     { label: 'Gothic Vaults', filter: 'image', query: 'Gothic' },
   ];
 
@@ -29,40 +30,41 @@ export function HomePage({ onNavigate, onOpenCreatePin }) {
 
   return (
     <div className="home-pinterest-page">
-      {/* Editorial Hero Banner */}
-      <section className="pinterest-hero-banner">
-        <div className="hero-atmosphere-glow" />
+      {/* 24-Hour Stories Social Ring */}
+      <StoryRingBar onOpenCreateStory={onOpenCreateStory} />
 
-        <div className="hero-content-cluster">
-          <div className="hero-kicker-strip">
-            <span className="kicker-glyph">✦</span>
-            <span className="kicker-text">NOCTURNAL VISUAL FEED & LITERARY SANCTUARY</span>
+      {/* Full Screen Width Single Row Hero Strip */}
+      <section className="hero-full-row-strip" aria-label="Editorial Platform Announcement">
+        <div className="hero-row-inner">
+          <div className="hero-row-badge">
+            <span className="hero-row-glyph">✦</span>
+            <span className="hero-row-kicker">NOCTURNAL VISUAL FEED &amp; SOCIAL CONTENT PLATFORM</span>
           </div>
 
-          <h1 className="hero-title-main">
-            Where Light Uncovers Art, Stories & Books
+          <div className="hero-row-divider" />
+
+          <h1 className="hero-row-title">
+            Where Light Uncovers Art, Stories &amp; AI Creations
           </h1>
 
-          <p className="hero-subtitle">
-            A Pinterest-style nocturnal haven. Glide your spotlight across curated photography,
-            read immersive midnight fiction, and open rare illuminated manuscripts in the dark.
+          <div className="hero-row-divider" />
+
+          <p className="hero-row-subtitle">
+            A dark-first discovery platform with selectable Light Mode. Glide your spotlight across curated photography, share 24-hour stories, synthesize neural imagery, and curate personal library collections.
           </p>
 
-          {/* Trending Topic Quick Pills */}
-          <div className="hero-trending-row">
-            <span className="trending-label">Trending:</span>
-            <div className="trending-chips-wrap">
-              {trendingTopics.map((topic, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className="trending-chip-btn"
-                  onClick={() => handleTopicClick(topic)}
-                >
-                  <span>{topic.label}</span>
-                </button>
-              ))}
-            </div>
+          <div className="hero-row-trending">
+            <span className="hero-trending-tag">Trending:</span>
+            {trendingTopics.slice(0, 3).map((topic, i) => (
+              <button
+                key={i}
+                type="button"
+                className="trending-chip-mini"
+                onClick={() => handleTopicClick(topic)}
+              >
+                {topic.label}
+              </button>
+            ))}
           </div>
         </div>
       </section>

@@ -11,18 +11,63 @@ import {
   EyeOutlined,
   ReadOutlined,
   CheckOutlined,
+  FolderAddOutlined,
+  WarningOutlined,
+  EllipsisOutlined,
+  DeleteOutlined,
+  ThunderboltFilled,
 } from '@ant-design/icons';
-import { Tooltip, Dropdown, App } from 'antd';
+import { BookmarkOutlined, BookmarkFilled } from './BookmarkIcons.jsx';
+import { Dropdown, App } from 'antd';
 import { usePinterest } from '../context/PinterestContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { PinArtwork } from './PinArtwork.jsx';
 
 export function PinCard({ pin }) {
   const { message } = App.useApp();
-  const { isSaved, isLiked, toggleLike, toggleSave, openPin, boards } = usePinterest();
+  const {
+    isSaved,
+    isLiked,
+    isPinned,
+    toggleLike,
+    toggleSave,
+    togglePinToProfile,
+    openPin,
+    setAddToLibraryTargetPin,
+    setReportTargetPin,
+    deletePin,
+  } = usePinterest();
+  const { currentUser, logActivity } = useAuth();
   const [copied, setCopied] = useState(false);
+
+  // Dynamic aspect ratio calculation based on pin metadata or natural image dimensions
+  // Stories use fixed consistent sizing matching "The Weaver in the Black Alder Wood"
+  const isStory = pin.type === 'story';
+
+  const initialRatio = React.useMemo(() => {
+    if (isStory) return null;
+    if (pin.aspectRatio) {
+      return pin.aspectRatio.includes(':')
+        ? pin.aspectRatio.replace(':', ' / ')
+        : pin.aspectRatio;
+    }
+    return null;
+  }, [pin.aspectRatio, isStory]);
+
+  const [cardAspectRatio, setCardAspectRatio] = useState(initialRatio);
+
+  React.useEffect(() => {
+    if (isStory) {
+      setCardAspectRatio(null);
+    } else if (initialRatio) {
+      setCardAspectRatio(initialRatio);
+    }
+  }, [initialRatio, isStory]);
 
   const saved = isSaved(pin.id);
   const liked = isLiked(pin.id);
+  const pinned = isPinned(pin.id);
+  const isAuthor = pin.author?.id === currentUser?.id || pin.author?.handle === `@${currentUser?.username}`;
 
   const handleShare = (e) => {
     e.stopPropagation();
@@ -40,29 +85,106 @@ export function PinCard({ pin }) {
     e.stopPropagation();
     toggleSave(pin.id);
     if (!saved) {
-      message.success(`Saved "${pin.title}" to Quick Saves!`);
+      message.success(`Saved "${pin.title}"!`);
+      logActivity('save', `Saved "${pin.title}"`, 'bookmark');
     } else {
-      message.info(`Removed "${pin.title}" from saved pins`);
+      message.info(`Removed "${pin.title}" from saved`);
     }
   };
 
-  const boardMenuItems = boards.map((b) => ({
-    key: b.id,
-    label: (
-      <div
-        className="board-menu-item"
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleSave(pin.id, b.id);
-          message.success(`Saved to board: ${b.name}`);
-        }}
-      >
-        <span className="board-color-dot" style={{ backgroundColor: b.coverColor }} />
-        <span className="board-name">{b.name}</span>
-        {b.pinIds.includes(pin.id) && <CheckOutlined className="board-check" />}
-      </div>
-    ),
-  }));
+  const handlePinToProfile = (e) => {
+    e.stopPropagation();
+    togglePinToProfile(pin.id);
+    if (!pinned) {
+      message.success(`Pinned "${pin.title}" to your Profile!`);
+      logActivity('pin', `Pinned "${pin.title}" to profile`, 'pushpin');
+    } else {
+      message.info(`Unpinned "${pin.title}" from profile`);
+    }
+  };
+
+  const handleAddToLibrary = (e) => {
+    e.stopPropagation();
+    setAddToLibraryTargetPin(pin);
+  };
+
+  const handleReport = (e) => {
+    e.stopPropagation();
+    setReportTargetPin(pin);
+  };
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    deletePin(pin.id);
+    message.info(`Deleted post "${pin.title}"`);
+  };
+
+  // Actions Dropdown menu
+  const menuItems = [
+    {
+      key: 'save',
+      label: (
+        <div className="flex items-center gap-2 py-1" onClick={handleSaveClick}>
+          {saved ? <BookmarkFilled style={{ color: '#e11d48' }} /> : <BookmarkOutlined />}
+          <span>{saved ? 'Remove from Saved' : 'Save to Vault'}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'pin-profile',
+      label: (
+        <div className="flex items-center gap-2 py-1" onClick={handlePinToProfile}>
+          {pinned ? <PushpinFilled style={{ color: '#00f2fe' }} /> : <PushpinOutlined />}
+          <span>{pinned ? 'Unpin from Profile' : 'Pin to Profile'}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'library',
+      label: (
+        <div className="flex items-center gap-2 py-1" onClick={handleAddToLibrary}>
+          <FolderAddOutlined style={{ color: '#38bdf8' }} />
+          <span>Add to Library Collection...</span>
+        </div>
+      ),
+    },
+    {
+      key: 'share',
+      label: (
+        <div className="flex items-center gap-2 py-1" onClick={handleShare}>
+          <ShareAltOutlined />
+          <span>Share Link</span>
+        </div>
+      ),
+    },
+    {
+      type: 'divider',
+    },
+    ...(isAuthor
+      ? [
+          {
+            key: 'delete',
+            danger: true,
+            label: (
+              <div className="flex items-center gap-2 py-1 text-rose-500" onClick={handleDelete}>
+                <DeleteOutlined />
+                <span>Delete Own Post</span>
+              </div>
+            ),
+          },
+        ]
+      : [
+          {
+            key: 'report',
+            label: (
+              <div className="flex items-center gap-2 py-1 text-slate-400" onClick={handleReport}>
+                <WarningOutlined />
+                <span>Report Content</span>
+              </div>
+            ),
+          },
+        ]),
+  ];
 
   const typeConfig = {
     image: { icon: <PictureOutlined />, label: 'Image', actionLabel: 'View' },
@@ -79,11 +201,31 @@ export function PinCard({ pin }) {
       role="article"
       aria-label={`${pin.type}: ${pin.title}`}
     >
-      {/* Visual Canvas Container */}
-      <div className="pin-visual-wrapper">
-        <PinArtwork pin={pin} />
+      {/* Flexible Visual Container with aspect-ratio based dynamic height (fixed for stories) */}
+      <div
+        className="pin-visual-wrapper"
+        style={!isStory && cardAspectRatio ? { aspectRatio: cardAspectRatio } : undefined}
+      >
+        <PinArtwork
+          pin={pin}
+          onAspectRatioCalculated={!isStory ? (calcRatio) => setCardAspectRatio(calcRatio) : undefined}
+        />
 
-        {/* Hover Overlay with Pinterest Controls */}
+        {/* Pinned Ribbon if active */}
+        {pinned && (
+          <div className="pin-pinned-badge" title="Pinned to Profile">
+            <PushpinFilled />
+          </div>
+        )}
+
+        {/* AI Synthetic Badge if generated */}
+        {pin.isAI && (
+          <div className="pin-ai-indicator" title="AI Generated Visual">
+            <ThunderboltFilled /> AI
+          </div>
+        )}
+
+        {/* Hover Overlay with Controls */}
         <div className="pin-hover-overlay">
           {/* Top Bar on Hover */}
           <div className="pin-top-controls">
@@ -92,16 +234,24 @@ export function PinCard({ pin }) {
               <span>{currentType.label}</span>
             </span>
 
-            <div className="pin-save-group" onClick={(e) => e.stopPropagation()}>
-              <Dropdown menu={{ items: boardMenuItems }} placement="bottomRight" trigger={['hover']}>
+            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                className={`pin-save-btn ${saved ? 'is-saved' : ''}`}
+                onClick={handleSaveClick}
+                title={saved ? 'Remove from saved' : 'Save post'}
+              >
+                {saved ? <BookmarkFilled /> : <BookmarkOutlined />}
+                <span>{saved ? 'Saved' : 'Save'}</span>
+              </button>
+
+              <Dropdown menu={{ items: menuItems }} placement="bottomRight" trigger={['click']}>
                 <button
                   type="button"
-                  className={`pin-save-btn ${saved ? 'is-saved' : ''}`}
-                  onClick={handleSaveClick}
-                  title={saved ? 'Remove from saved' : 'Save pin'}
+                  className="pin-more-options-btn"
+                  title="More actions"
                 >
-                  {saved ? <PushpinFilled /> : <PushpinOutlined />}
-                  <span>{saved ? 'Saved' : 'Save'}</span>
+                  <EllipsisOutlined />
                 </button>
               </Dropdown>
             </div>
@@ -128,6 +278,9 @@ export function PinCard({ pin }) {
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleLike(pin.id);
+                  if (!liked) {
+                    logActivity('like', `Liked "${pin.title}"`, 'heart');
+                  }
                 }}
                 title={liked ? 'Unlike' : 'Like'}
                 aria-label="Like pin"

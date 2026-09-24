@@ -208,6 +208,7 @@ export const INITIAL_PINS = [
     category: "Gothic Mystery",
     title: "The Watchmaker of Midnight Bell",
     readTime: "6 min read",
+    imageUrl: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&auto=format&fit=crop&q=80",
     author: {
       name: "Arthur Pendelton",
       handle: "@pendelton_tales",
@@ -274,6 +275,7 @@ Julian looked at the key. The lantern between them seemed to flare with sudden w
     category: "Nocturnal Sci-Fi",
     title: "Signals from the Event Horizon",
     readTime: "8 min read",
+    imageUrl: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?w=800&auto=format&fit=crop&q=80",
     author: {
       name: "Sariha Chen",
       handle: "@sariha_chen",
@@ -388,6 +390,7 @@ And when Kellan walked out beneath the cold stars, the bitterness that had choke
     category: "Nocturnal Microfiction",
     title: "The City That Slept in the Fog",
     readTime: "4 min read",
+    imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&auto=format&fit=crop&q=80",
     author: {
       name: "Iliya Vance",
       handle: "@iliyavance",

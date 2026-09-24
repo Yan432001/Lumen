@@ -14,10 +14,12 @@ import {
 } from '@ant-design/icons';
 import { App } from 'antd';
 import { usePinterest } from '../context/PinterestContext.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 export function BookReaderModal({ pin, onClose }) {
   const { message } = App.useApp();
   const { isSaved, isLiked, toggleLike, toggleSave } = usePinterest();
+  const { isDark } = useTheme();
   const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
   const [showToc, setShowToc] = useState(false);
   const [fontSize, setFontSize] = useState('medium'); // 'small' | 'medium' | 'large'
@@ -78,9 +80,10 @@ export function BookReaderModal({ pin, onClose }) {
   const progressPercent = Math.round(((currentChapterIndex + 1) / totalChapters) * 100);
 
   return (
-    <div className="pin-modal-backdrop" onClick={onClose}>
+    <div className={`pin-modal-backdrop ${isDark ? 'dark-mode' : 'light-mode'}`} onClick={onClose}>
       <div
-        className="pin-modal-container book-reader-modal"
+        className={`pin-modal-container book-reader-modal ${isDark ? 'modal-theme-dark' : 'modal-theme-light'}`}
+        data-theme={isDark ? 'dark' : 'light'}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Book Header Bar */}

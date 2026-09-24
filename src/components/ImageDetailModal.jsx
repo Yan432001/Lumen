@@ -12,11 +12,13 @@ import {
 } from '@ant-design/icons';
 import { App } from 'antd';
 import { usePinterest } from '../context/PinterestContext.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
 import { PinArtwork } from './PinArtwork.jsx';
 
 export function ImageDetailModal({ pin, onClose }) {
   const { message } = App.useApp();
   const { isSaved, isLiked, toggleLike, toggleSave, addComment } = usePinterest();
+  const { isDark } = useTheme();
   const [commentText, setCommentText] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -45,8 +47,12 @@ export function ImageDetailModal({ pin, onClose }) {
   };
 
   return (
-    <div className="pin-modal-backdrop" onClick={onClose}>
-      <div className="pin-modal-container image-modal" onClick={(e) => e.stopPropagation()}>
+    <div className={`pin-modal-backdrop ${isDark ? 'dark-mode' : 'light-mode'}`} onClick={onClose}>
+      <div
+        className={`pin-modal-container image-modal ${isDark ? 'modal-theme-dark' : 'modal-theme-light'}`}
+        data-theme={isDark ? 'dark' : 'light'}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Close Button */}
         <button
           type="button"

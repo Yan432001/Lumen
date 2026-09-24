@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useSpotlight } from './useSpotlight.js';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 // Helper to convert hex to RGB object
 function hexToRgb(hex) {
@@ -27,7 +28,12 @@ function interpolateColor(color1, color2, factor) {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-export function SpotlightRenderer() {
+/**
+ * Active Spotlight Canvas Implementation
+ * Handles 60 FPS requestAnimationFrame rendering and mouse/touch tracking.
+ * Mounted ONLY when theme is 'dark'.
+ */
+function SpotlightCanvasInner() {
   const { settings } = useSpotlight();
   const canvasRef = useRef(null);
 
@@ -46,9 +52,11 @@ export function SpotlightRenderer() {
   const clickEffectsRef = useRef([]);
   const animFrameRef = useRef(null);
 
-  // Event Listeners for Mouse and Touch
+  // Event Listeners for Mouse and Touch (only runs when SpotlightCanvasInner is mounted in Dark Mode)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {
+      return;
+    }
 
     const handleMouseMove = (e) => {
       posRef.current.targetX = e.clientX;
@@ -90,9 +98,14 @@ export function SpotlightRenderer() {
       window.removeEventListener('touchstart', handleTouchMove);
       window.removeEventListener('click', handleClick);
     };
-  }, [settings.mobile.behavior, settings.clickEffect.type, settings.clickEffect.duration, settings.clickEffect.intensity]);
+  }, [
+    settings.mobile.behavior,
+    settings.clickEffect.type,
+    settings.clickEffect.duration,
+    settings.clickEffect.intensity,
+  ]);
 
-  // Main Render Animation Loop
+  // Main Render Animation Loop (mounted only in Dark Mode)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -165,12 +178,14 @@ export function SpotlightRenderer() {
         const cycleSpeed = (settings.colorCycle.speed / 100) * 0.003 + 0.0005;
         const totalColors = settings.colors.length;
         const cycleTime = (now * cycleSpeed) % totalColors;
-        const idx = settings.colorCycle.direction === 'reverse'
-          ? Math.floor((totalColors - cycleTime) % totalColors)
-          : Math.floor(cycleTime);
-        const nextIdx = settings.colorCycle.direction === 'reverse'
-          ? (idx - 1 + totalColors) % totalColors
-          : (idx + 1) % totalColors;
+        const idx =
+          settings.colorCycle.direction === 'reverse'
+            ? Math.floor((totalColors - cycleTime) % totalColors)
+            : Math.floor(cycleTime);
+        const nextIdx =
+          settings.colorCycle.direction === 'reverse'
+            ? (idx - 1 + totalColors) % totalColors
+            : (idx + 1) % totalColors;
         const progress = cycleTime - Math.floor(cycleTime);
         activeColor = interpolateColor(settings.colors[idx], settings.colors[nextIdx], progress);
       }
@@ -221,9 +236,9 @@ export function SpotlightRenderer() {
         }
       }
 
-      // Base radius calculation (taking mobile radius into account)
+      // Base radius calculation
       const baseRadius = (width < 768 ? settings.mobile.radius || 250 : settings.radius) * animRadiusMod * idleFactor;
-      const effectiveIntensity = Math.min(100, Math.max(0, (settings.intensity * animIntensityMod * idleFactor)));
+      const effectiveIntensity = Math.min(100, Math.max(0, settings.intensity * animIntensityMod * idleFactor));
       const effectiveOpacity = settings.opacity / 100;
 
       // 5. Update Trail History
@@ -244,14 +259,12 @@ export function SpotlightRenderer() {
         trailHistoryRef.current = [];
       }
 
-      // 6. Draw on Canvas
+      // 6. Draw Dark Mode Canvas: Nocturnal overlay + Spotlight revelation
       ctx.clearRect(0, 0, width, height);
 
-      // Darkness Layer
-      // Ambient light ensures content remains slightly discernable if desired
       const ambientDampening = (settings.ambientLight / 20) * 0.18;
-      const darkAlpha = Math.min(0.99, Math.max(0.6, (settings.darkness / 100) - ambientDampening));
-      
+      const darkAlpha = Math.min(0.99, Math.max(0.6, settings.darkness / 100 - ambientDampening));
+
       ctx.globalCompositeOperation = 'source-over';
       ctx.fillStyle = `rgba(5, 5, 8, ${darkAlpha})`;
       ctx.fillRect(0, 0, width, height);
@@ -307,7 +320,7 @@ export function SpotlightRenderer() {
         }
       };
 
-      // 7. Cut Darkness Hole (destination-out)
+      // 7. Cut Darkness Hole (destination-out) to reveal content beneath
       ctx.globalCompositeOperation = 'destination-out';
 
       // Draw trails first (fainter cut)
@@ -338,7 +351,7 @@ export function SpotlightRenderer() {
       drawShapeMask(pos.x, pos.y, baseRadius, settings.shape);
       ctx.fill();
 
-      // 8. Color Glow & Illumination Beam (source-over / screen blend)
+      // 8. Color Glow & Illumination Beam (source-over)
       ctx.globalCompositeOperation = 'source-over';
       const rgb = hexToRgb(activeColor);
       const intensityFactor = (effectiveIntensity / 100) * (settings.opacity / 100);
@@ -402,7 +415,7 @@ export function SpotlightRenderer() {
             const dist = baseRadius * progress * 1.4;
             ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${effectIntensity})`;
             for (let b = 0; b < count; b++) {
-              const ang = (Math.PI * 2 / count) * b;
+              const ang = ((Math.PI * 2) / count) * b;
               const bx = effect.x + Math.cos(ang) * dist;
               const by = effect.y + Math.sin(ang) * dist;
               ctx.beginPath();
@@ -415,7 +428,7 @@ export function SpotlightRenderer() {
         });
       }
 
-      // 10. Update CSS Variables on document root for reactive elements
+      // 10. Update CSS Variables on document root for reactive elements (Dark Mode only)
       const rootStyle = document.documentElement.style;
       rootStyle.setProperty('--spotlight-x', `${pos.x}px`);
       rootStyle.setProperty('--spotlight-y', `${pos.y}px`);
@@ -434,6 +447,14 @@ export function SpotlightRenderer() {
       isRunning = false;
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       window.removeEventListener('resize', resizeCanvas);
+      const rootStyle = document.documentElement.style;
+      rootStyle.removeProperty('--spotlight-x');
+      rootStyle.removeProperty('--spotlight-y');
+      rootStyle.removeProperty('--spotlight-radius');
+      rootStyle.removeProperty('--spotlight-color');
+      rootStyle.removeProperty('--spotlight-opacity');
+      rootStyle.removeProperty('--spotlight-darkness');
+      rootStyle.removeProperty('--spotlight-softness');
     };
   }, [settings]);
 
@@ -451,4 +472,21 @@ export function SpotlightRenderer() {
       aria-hidden="true"
     />
   );
+}
+
+/**
+ * Centralized Spotlight Component
+ * Conditionally rendered based on 'dark' vs 'light' theme state from ThemeProvider.
+ * If the theme is 'light', the spotlight canvas component is NOT mounted or rendered at all,
+ * ensuring zero CPU/GPU overhead, no window event listeners, and no requestAnimationFrame loop.
+ */
+export function SpotlightRenderer() {
+  const { theme, isDark } = useTheme();
+
+  // Zero-overhead check: If theme is 'light', do not mount or render at all
+  if (theme === 'light' || !isDark) {
+    return null;
+  }
+
+  return <SpotlightCanvasInner />;
 }

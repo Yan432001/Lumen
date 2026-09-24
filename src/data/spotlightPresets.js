@@ -124,6 +124,118 @@ export const spotlightPresets = {
     reducedMotion: false
   },
 
+  circle: {
+    ...defaultSpotlightSettings,
+    preset: "circle",
+    shape: "circle",
+    colorMode: "fixed",
+    color: "#FFFFFF",
+    colors: [],
+    colorCycle: {
+      enabled: false,
+      speed: 5,
+      direction: "forward"
+    },
+    radius: 340,
+    softness: 65,
+    darkness: 92,
+    intensity: 90,
+    opacity: 100,
+    glow: {
+      enabled: true,
+      intensity: 45,
+      radius: 50
+    },
+    animation: {
+      type: "none",
+      speed: 50,
+      intensity: 50
+    },
+    follow: {
+      speed: 80,
+      smoothing: true
+    },
+    trail: {
+      enabled: false,
+      length: 4,
+      opacity: 25,
+      blur: 8
+    },
+    clickEffect: {
+      type: "ripple",
+      duration: 400,
+      intensity: 45
+    },
+    idle: {
+      behavior: "keep",
+      timeout: 5000,
+      wanderSpeed: 20,
+      wanderRadius: 150
+    },
+    ambientLight: 5,
+    mobile: {
+      behavior: "touch",
+      radius: 240
+    },
+    reducedMotion: false
+  },
+
+  softglow: {
+    ...defaultSpotlightSettings,
+    preset: "softglow",
+    shape: "circle",
+    colorMode: "fixed",
+    color: "#FFF4DD",
+    colors: [],
+    colorCycle: {
+      enabled: false,
+      speed: 5,
+      direction: "forward"
+    },
+    radius: 460,
+    softness: 95,
+    darkness: 88,
+    intensity: 78,
+    opacity: 100,
+    glow: {
+      enabled: true,
+      intensity: 65,
+      radius: 80
+    },
+    animation: {
+      type: "breathing",
+      speed: 25,
+      intensity: 30
+    },
+    follow: {
+      speed: 65,
+      smoothing: true
+    },
+    trail: {
+      enabled: false,
+      length: 4,
+      opacity: 20,
+      blur: 10
+    },
+    clickEffect: {
+      type: "glow-ring",
+      duration: 600,
+      intensity: 40
+    },
+    idle: {
+      behavior: "keep",
+      timeout: 6000,
+      wanderSpeed: 15,
+      wanderRadius: 100
+    },
+    ambientLight: 8,
+    mobile: {
+      behavior: "touch",
+      radius: 300
+    },
+    reducedMotion: false
+  },
+
   candle: {
     ...defaultSpotlightSettings,
     preset: "candle",

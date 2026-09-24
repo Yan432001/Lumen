@@ -5,10 +5,24 @@ import React from 'react';
  * Renders exquisite procedural vector graphics, glowing gradients,
  * and illuminated motifs that react to the mouse spotlight.
  */
-export function PinArtwork({ pin, className = '', height = 'auto' }) {
+export function PinArtwork({ pin, className = '', height = 'auto', onAspectRatioCalculated = null }) {
   const { type, visualStyle, title, category, id } = pin;
   const accent = visualStyle?.accent || '#38bdf8';
   const gradient = visualStyle?.gradient || 'linear-gradient(180deg, #090d16 0%, #1e293b 100%)';
+
+  const [imageError, setImageError] = React.useState(false);
+  const [storyImageError, setStoryImageError] = React.useState(false);
+  const [bookImageError, setBookImageError] = React.useState(false);
+
+  const handleImageLoad = (e) => {
+    const img = e.currentTarget;
+    if (img && img.naturalWidth && img.naturalHeight) {
+      const calculatedRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
+      if (onAspectRatioCalculated) {
+        onAspectRatioCalculated(calculatedRatio);
+      }
+    }
+  };
 
   // Specific bespoke vector graphics based on pin theme
   const renderBespokeArt = () => {
@@ -240,11 +254,23 @@ export function PinArtwork({ pin, className = '', height = 'auto' }) {
   if (type === 'book') {
     return (
       <div
-        className={`pin-book-cover-container ${className}`}
+        className={`pin-book-cover-container relative overflow-hidden ${className}`}
         style={{ background: gradient, minHeight: height === 'auto' ? '260px' : height }}
       >
-        <div className="book-binding-spine" />
-        <div className="book-front-cover">
+        {pin.imageUrl && !bookImageError && (
+          <div className="absolute inset-0 z-0">
+            <img
+              src={pin.imageUrl}
+              alt={title}
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+              onError={() => setBookImageError(true)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/60" />
+          </div>
+        )}
+        <div className="book-binding-spine relative z-10" />
+        <div className="book-front-cover relative z-10">
           <div className="book-filigree-border">
             <div className="book-corner-ornament top-left">✦</div>
             <div className="book-corner-ornament top-right">✦</div>
@@ -276,36 +302,49 @@ export function PinArtwork({ pin, className = '', height = 'auto' }) {
 
   // Dedicated Story Card representation
   if (type === 'story') {
+    const storyImg = pin.imageUrl || pin.mediaUrl;
     return (
       <div
-        className={`pin-story-cover-container ${className}`}
-        style={{ background: gradient, minHeight: height === 'auto' ? '240px' : height }}
+        className={`pin-story-cover-container relative overflow-hidden w-full ${className}`}
+        style={{ background: gradient }}
       >
+        {storyImg && !storyImageError && (
+          <div className="story-image-bg absolute inset-0 z-0">
+            <img
+              src={storyImg}
+              alt={title}
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+              onError={() => setStoryImageError(true)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-black/40" />
+          </div>
+        )}
         <div className="story-ambient-glow" style={{ background: `radial-gradient(circle at 70% 30%, ${accent}25, transparent 65%)` }} />
-        <div className="story-cover-inner">
-          <div className="story-header-row">
-            <span className="story-category-tag" style={{ color: accent }}>
+        <div className="story-cover-inner relative z-10 flex flex-col justify-between h-full p-4">
+          <div className="story-header-row flex items-center justify-between">
+            <span className="story-category-tag font-semibold text-xs tracking-wider uppercase" style={{ color: accent }}>
               {category}
             </span>
             <span className="story-readtime-badge">{pin.readTime}</span>
           </div>
 
-          <div className="story-lead-area">
-            <div className="story-symbol" style={{ color: accent }}>
+          <div className="story-lead-area my-auto">
+            <div className="story-symbol text-2xl mb-1.5" style={{ color: accent }}>
               {visualStyle?.symbol || '🖋️'}
             </div>
-            <h4 className="story-title-display">{title}</h4>
+            <h4 className="story-title-display text-base font-bold text-white leading-snug line-clamp-2">{title}</h4>
           </div>
 
           {pin.quote ? (
-            <p className="story-quote-preview">{pin.quote}</p>
+            <p className="story-quote-preview line-clamp-2 text-xs italic text-slate-300">{pin.quote}</p>
           ) : (
-            <p className="story-excerpt-preview">{pin.excerpt}</p>
+            <p className="story-excerpt-preview line-clamp-2 text-xs text-slate-300">{pin.excerpt}</p>
           )}
 
-          <div className="story-action-hint">
+          <div className="story-action-hint mt-2 flex items-center justify-between text-xs text-slate-400">
             <span className="hint-text">Click to read story</span>
-            <span className="hint-arrow">→</span>
+            <span className="hint-arrow text-emerald-400 font-bold">→</span>
           </div>
         </div>
       </div>
@@ -320,6 +359,23 @@ export function PinArtwork({ pin, className = '', height = 'auto' }) {
 
   // Fallback for custom user pins with image URLs or gradients
   if (pin.imageUrl) {
+    if (imageError) {
+      return (
+        <div
+          className={`pin-artwork-fallback ${className}`}
+          style={{
+            background: gradient,
+            minHeight: height === 'auto' ? '220px' : height,
+          }}
+        >
+          <div className="fallback-ambient" style={{ background: `radial-gradient(circle at 50% 50%, ${accent}30, transparent 70%)` }} />
+          <span className="fallback-symbol">{visualStyle?.symbol || '🌌'}</span>
+          <span className="fallback-category">{category}</span>
+          <span className="fallback-title">{title}</span>
+        </div>
+      );
+    }
+
     return (
       <div className={`pin-artwork-wrapper ${className}`}>
         <img
@@ -327,16 +383,9 @@ export function PinArtwork({ pin, className = '', height = 'auto' }) {
           alt={title}
           referrerPolicy="no-referrer"
           className="pin-artwork-img"
-          onError={(e) => {
-            // Fallback gracefully on broken images
-            e.currentTarget.style.display = 'none';
-            e.currentTarget.nextElementSibling.style.display = 'flex';
-          }}
+          onLoad={handleImageLoad}
+          onError={() => setImageError(true)}
         />
-        <div className="pin-artwork-fallback" style={{ display: 'none', background: gradient }}>
-          <span className="fallback-symbol">{visualStyle?.symbol || '🌌'}</span>
-          <span className="fallback-title">{title}</span>
-        </div>
       </div>
     );
   }
