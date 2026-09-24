@@ -33,38 +33,40 @@ export function HomePage({ onNavigate, onOpenCreatePin, onOpenCreateStory }) {
       {/* 24-Hour Stories Social Ring */}
       <StoryRingBar onOpenCreateStory={onOpenCreateStory} />
 
-      {/* Full Screen Width Single Row Hero Strip */}
-      <section className="hero-full-row-strip" aria-label="Editorial Platform Announcement">
-        <div className="hero-row-inner">
-          <div className="hero-row-badge">
-            <span className="hero-row-glyph">✦</span>
-            <span className="hero-row-kicker">NOCTURNAL VISUAL FEED &amp; SOCIAL CONTENT PLATFORM</span>
+      {/* Editorial Hero Banner */}
+      <section className="pinterest-hero-banner">
+        <div className="hero-atmosphere-glow" />
+
+        <div className="hero-content-cluster">
+          <div className="hero-kicker-strip">
+            <span className="kicker-glyph">✦</span>
+            <span className="kicker-text">NOCTURNAL VISUAL FEED & SOCIAL CONTENT PLATFORM</span>
           </div>
 
-          <div className="hero-row-divider" />
-
-          <h1 className="hero-row-title">
-            Where Light Uncovers Art, Stories &amp; AI Creations
+          <h1 className="hero-title-main">
+            Where Light Uncovers Art, Stories & AI Creations
           </h1>
 
-          <div className="hero-row-divider" />
-
-          <p className="hero-row-subtitle">
-            A dark-first discovery platform with selectable Light Mode. Glide your spotlight across curated photography, share 24-hour stories, synthesize neural imagery, and curate personal library collections.
+          <p className="hero-subtitle">
+            A dark-first discovery platform with selectable Light Mode. Glide your spotlight across curated photography,
+            share 24-hour stories, synthesize neural imagery, and curate personal library collections.
           </p>
 
-          <div className="hero-row-trending">
-            <span className="hero-trending-tag">Trending:</span>
-            {trendingTopics.slice(0, 3).map((topic, i) => (
-              <button
-                key={i}
-                type="button"
-                className="trending-chip-mini"
-                onClick={() => handleTopicClick(topic)}
-              >
-                {topic.label}
-              </button>
-            ))}
+          {/* Trending Topic Quick Pills */}
+          <div className="hero-trending-row">
+            <span className="trending-label">Trending:</span>
+            <div className="trending-chips-wrap">
+              {trendingTopics.map((topic, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className="trending-chip-btn"
+                  onClick={() => handleTopicClick(topic)}
+                >
+                  <span>{topic.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>

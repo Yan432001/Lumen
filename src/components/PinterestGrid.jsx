@@ -37,31 +37,30 @@ export function PinterestGrid({ onOpenCreatePin, customCategoryTitle = null }) {
 
   return (
     <section className="pinterest-grid-section">
-      {/* Active Search Banner (driven exclusively from Header Search) */}
-      {searchQuery && (
-        <div className="header-search-active-banner">
-          <div className="search-banner-left">
-            <SearchOutlined className="search-banner-icon" />
-            <span className="search-banner-text">
-              Showing search results for <strong className="search-query-highlight">&ldquo;{searchQuery}&rdquo;</strong>
-            </span>
-            <span className="search-banner-count">
-              {filteredPins.length} {filteredPins.length === 1 ? 'match' : 'matches'} across {activeFilter === 'all' ? 'entire site' : activeFilter}
-            </span>
-          </div>
-          <button
-            type="button"
-            className="search-banner-clear-btn"
-            onClick={() => setSearchQuery('')}
-          >
-            <CloseCircleFilled />
-            <span>Clear Search</span>
-          </button>
-        </div>
-      )}
-
-      {/* Category Header & Filter Row */}
+      {/* Category Header or Search / Filter Bar */}
       <div className="grid-controls-container">
+        {/* Search Bar - Pinterest Style */}
+        <div className="pinterest-search-bar">
+          <SearchOutlined className="search-icon" />
+          <input
+            type="text"
+            className="pinterest-search-input"
+            placeholder="Search images, dark fiction stories, grimoires, authors, or tags..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              className="search-clear-btn"
+              onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
+            >
+              <CloseCircleFilled />
+            </button>
+          )}
+        </div>
+
         {/* Filter Navigation & Actions Row */}
         <div className="grid-filter-row">
           <div className="filter-tabs-group" role="tablist">

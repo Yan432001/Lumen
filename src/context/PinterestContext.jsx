@@ -631,7 +631,7 @@ export function PinterestProvider({ children }) {
           const matchAuthor = pin.author?.name?.toLowerCase().includes(q) || pin.author?.handle?.toLowerCase().includes(q);
           const matchCategory = pin.category?.toLowerCase().includes(q);
           const matchTags = pin.tags?.some((t) => t.toLowerCase().includes(q));
-          const matchDesc = (pin.description || pin.summary || pin.excerpt || pin.quote || pin.storyBody || pin.fullStory || '')
+          const matchDesc = (pin.description || pin.summary || pin.excerpt || '')
             .toLowerCase()
             .includes(q);
           if (!matchTitle && !matchAuthor && !matchCategory && !matchTags && !matchDesc) {

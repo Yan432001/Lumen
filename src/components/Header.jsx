@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React from 'react';
 import {
   SettingOutlined,
   PlusOutlined,
@@ -14,12 +14,6 @@ import {
   SwapOutlined,
   ThunderboltFilled,
   DownOutlined,
-  SearchOutlined,
-  CloseCircleFilled,
-  ArrowRightOutlined,
-  BookOutlined,
-  FileTextOutlined,
-  PictureOutlined,
 } from '@ant-design/icons';
 import { BookmarkOutlined } from './BookmarkIcons.jsx';
 import { Dropdown, App } from 'antd';
@@ -38,31 +32,9 @@ export function Header({
 }) {
   const { message } = App.useApp();
   const { settings, setIsSettingsOpen } = useSpotlight();
-  const {
-    pins,
-    searchQuery,
-    setSearchQuery,
-    setActiveFilter,
-    openPin,
-    savedPinIds,
-    collections,
-  } = usePinterest();
+  const { savedPinIds, collections } = usePinterest();
   const { themeMode, toggleTheme, isDark, enableMouseSpotlight } = useTheme();
-  const { currentUser, users, openAuthModal } = useAuth();
-
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const searchContainerRef = useRef(null);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleOutsideClick = (e) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
-        setIsSearchFocused(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, []);
+  const { currentUser, openAuthModal } = useAuth();
 
   const handleThemeToggle = () => {
     if (isDark) {
@@ -84,76 +56,6 @@ export function Header({
       });
     }
   };
-
-  const trimmedQuery = searchQuery.trim().toLowerCase();
-
-  // Real-time matching across everything in the website: Images, Stories, Books, AI, Tags, Authors
-  const matchingPins = useMemo(() => {
-    if (!trimmedQuery) return [];
-    return pins.filter((p) => {
-      const matchTitle = p.title?.toLowerCase().includes(trimmedQuery);
-      const matchAuthor = p.author?.name?.toLowerCase().includes(trimmedQuery) || p.author?.handle?.toLowerCase().includes(trimmedQuery);
-      const matchCat = p.category?.toLowerCase().includes(trimmedQuery);
-      const matchTag = p.tags?.some((t) => t.toLowerCase().includes(trimmedQuery));
-      const matchDesc = (p.description || p.summary || p.excerpt || p.quote || p.storyBody || p.fullStory || '')
-        .toLowerCase()
-        .includes(trimmedQuery);
-      return matchTitle || matchAuthor || matchCat || matchTag || matchDesc;
-    });
-  }, [pins, trimmedQuery]);
-
-  // Matching Authors / Users
-  const matchingUsers = useMemo(() => {
-    if (!trimmedQuery) return [];
-    return (users || []).filter((u) => {
-      const nameMatch = u.name?.toLowerCase().includes(trimmedQuery);
-      const usernameMatch = u.username?.toLowerCase().includes(trimmedQuery);
-      const bioMatch = u.bio?.toLowerCase().includes(trimmedQuery);
-      return nameMatch || usernameMatch || bioMatch;
-    });
-  }, [users, trimmedQuery]);
-
-  // Execute global search
-  const handleExecuteSearch = (queryText) => {
-    const text = queryText !== undefined ? queryText : searchQuery;
-    setSearchQuery(text);
-    setActiveFilter('all');
-    setIsSearchFocused(false);
-
-    // If currently on a profile or settings or library, route to home feed to show search results
-    if (currentTab !== 'home' && currentTab !== 'explore' && currentTab !== 'stories' && currentTab !== 'images' && currentTab !== 'books') {
-      onTabChange('home');
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleExecuteSearch();
-    } else if (e.key === 'Escape') {
-      setIsSearchFocused(false);
-    }
-  };
-
-  const handleSelectPin = (pin) => {
-    setIsSearchFocused(false);
-    openPin(pin);
-  };
-
-  const handleSelectUser = (user) => {
-    setSearchQuery(user.name);
-    setIsSearchFocused(false);
-    onTabChange('profile');
-  };
-
-  const popularTopics = [
-    { label: 'Victorian Clocks', type: 'story', query: 'Watchmaker' },
-    { label: 'Antique Grimoires', type: 'book', query: 'Grimoire' },
-    { label: 'Rainy Kyoto Noir', type: 'image', query: 'Kyoto' },
-    { label: 'Deep Space Nebula', type: 'image', query: 'Nebula' },
-    { label: 'Cyberpunk Cities', type: 'ai', query: 'Cyberpunk' },
-    { label: 'Dark Folklore', type: 'story', query: 'Dark Fiction' },
-  ];
 
   const navLinks = [
     { id: 'home', label: 'Home', icon: <HomeOutlined /> },
@@ -276,7 +178,7 @@ export function Header({
         </div>
 
         {/* Center: Desktop Navigation Links */}
-        <nav className="site-nav hidden lg:flex">
+        <nav className="site-nav hidden md:flex">
           {navLinks.map((item) => (
             <button
               key={item.id}
@@ -288,150 +190,6 @@ export function Header({
             </button>
           ))}
         </nav>
-
-        {/* Global Header Search Bar (Only search box in this website) */}
-        <div className="header-search-wrapper" ref={searchContainerRef}>
-          <div className={`header-search-bar ${isSearchFocused ? 'is-focused' : ''}`}>
-            <SearchOutlined className="header-search-icon" />
-            <input
-              type="text"
-              className="header-search-input"
-              placeholder="Search all images, dark stories, books, authors, or tags..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setIsSearchFocused(true);
-              }}
-              onFocus={() => setIsSearchFocused(true)}
-              onKeyDown={handleKeyDown}
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                className="header-search-clear"
-                onClick={() => {
-                  setSearchQuery('');
-                  handleExecuteSearch('');
-                }}
-                aria-label="Clear search"
-              >
-                <CloseCircleFilled />
-              </button>
-            )}
-          </div>
-
-          {/* Instant Live Search Results & Suggestions Dropdown */}
-          {isSearchFocused && (
-            <div className="header-search-dropdown">
-              <div className="search-dropdown-scroll">
-                {/* When user has typed query */}
-                {trimmedQuery ? (
-                  <>
-                    {/* Matching Pins (Images, Stories, Books, AI) */}
-                    {matchingPins.length > 0 ? (
-                      <div className="search-results-section">
-                        <div className="search-section-header">
-                          <span>Artifacts ({matchingPins.length})</span>
-                          <span className="text-[11px] text-slate-500 font-normal">Stories, Books & Visuals</span>
-                        </div>
-                        {matchingPins.slice(0, 5).map((pin) => (
-                          <div
-                            key={pin.id}
-                            className="search-result-item"
-                            onClick={() => handleSelectPin(pin)}
-                          >
-                            <div className="search-result-thumb">
-                              {pin.image ? (
-                                <img src={pin.image} alt={pin.title} referrerPolicy="no-referrer" />
-                              ) : (
-                                <div className="text-slate-400">
-                                  {pin.type === 'story' ? <FileTextOutlined /> : <BookOutlined />}
-                                </div>
-                              )}
-                            </div>
-                            <div className="search-result-info">
-                              <div className="search-result-title">{pin.title}</div>
-                              <div className="search-result-meta">
-                                <span className={`search-type-badge badge-${pin.type}`}>
-                                  {pin.type}
-                                </span>
-                                <span>by {pin.author?.name || 'Unknown'}</span>
-                                {pin.category && <span>· {pin.category}</span>}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="search-no-results py-4 px-3 text-center text-slate-400 text-xs">
-                        No artifacts matching &ldquo;{searchQuery}&rdquo;
-                      </div>
-                    )}
-
-                    {/* Matching Authors/Creators */}
-                    {matchingUsers.length > 0 && (
-                      <div className="search-results-section mt-2 pt-2 border-t border-[#1e2235]">
-                        <div className="search-section-header">
-                          <span>Creators & Authors ({matchingUsers.length})</span>
-                        </div>
-                        {matchingUsers.slice(0, 3).map((user) => (
-                          <div
-                            key={user.id}
-                            className="search-result-item"
-                            onClick={() => handleSelectUser(user)}
-                          >
-                            <img
-                              src={user.avatar}
-                              alt={user.name}
-                              className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                            />
-                            <div className="search-result-info">
-                              <div className="search-result-title">{user.name}</div>
-                              <div className="search-result-meta">@{user.username}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  /* When user clicked search box before typing - show Popular Topics */
-                  <div className="search-suggestions-section">
-                    <div className="search-section-header">
-                      <span>Trending Topics & Nocturnal Lore</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2 p-2">
-                      {popularTopics.map((topic) => (
-                        <button
-                          key={topic.label}
-                          type="button"
-                          className="search-tag-chip"
-                          onClick={() => handleExecuteSearch(topic.query)}
-                        >
-                          <span className="text-rose-400">#</span>
-                          <span>{topic.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Dropdown Footer with Action */}
-              <div className="search-dropdown-footer">
-                <span>Press <strong>Enter</strong> to search entire website</span>
-                <button
-                  type="button"
-                  className="view-all-results-btn"
-                  onClick={() => handleExecuteSearch()}
-                >
-                  <span>Search All</span>
-                  <ArrowRightOutlined />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Right: Actions Cluster */}
         <div className="header-actions-cluster">

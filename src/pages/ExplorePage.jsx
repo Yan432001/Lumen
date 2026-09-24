@@ -20,9 +20,10 @@ import { PinCard } from '../components/PinCard.jsx';
 
 export function ExplorePage() {
   const { message } = App.useApp();
-  const { pins, searchQuery, setSearchQuery } = usePinterest();
+  const { pins } = usePinterest();
   const { users, currentUser, isFollowing, toggleFollow } = useAuth();
 
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState('All');
   const [selectedRealm, setSelectedRealm] = useState('all');
   const [selectedFormat, setSelectedFormat] = useState('all'); // 'all' | 'image' | 'story' | 'book' | 'ai'
@@ -168,23 +169,27 @@ export function ExplorePage() {
             illuminated by master curators.
           </p>
 
-          {/* Active Search Banner when searched from Header */}
-          {searchQuery && (
-            <div className="explore-active-search-chip">
-              <span className="text-slate-300 text-xs">
-                Searching for: <strong className="text-white">&ldquo;{searchQuery}&rdquo;</strong>
-              </span>
+          {/* Interactive Search Field */}
+          <div className="explore-search-input-wrap">
+            <SearchOutlined className="explore-search-icon" />
+            <input
+              type="text"
+              className="explore-search-input"
+              placeholder="Search across astral nebulas, folios, neural cities, authors, or tags..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
               <button
                 type="button"
-                className="text-slate-400 hover:text-rose-400 text-xs flex items-center gap-1 transition-colors"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
                 onClick={() => setSearchQuery('')}
-                title="Clear search query"
+                aria-label="Clear search query"
               >
                 <CloseCircleFilled />
-                <span>Clear</span>
               </button>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Platform Metrics Strip */}
           <div className="explore-stats-strip">
